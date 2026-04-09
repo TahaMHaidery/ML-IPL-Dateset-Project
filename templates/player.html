@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h2>👤 Player Runs Prediction</h2>
+
+<div class="card p-4">
+
+    <!-- Player -->
+    <select id="player" class="form-control mb-2">
+        <option value="">Select Player</option>
+        {% for p in players %}
+        <option value="{{p}}">{{p}}</option>
+        {% endfor %}
+    </select>
+
+    <!-- Batting Team -->
+    <select id="batting_team" class="form-control mb-2">
+        <option value="">Select Batting Team</option>
+        {% for t in teams %}
+        <option value="{{t}}">{{t}}</option>
+        {% endfor %}
+    </select>
+
+    <!-- Bowling Team -->
+    <select id="bowling_team" class="form-control mb-2">
+        <option value="">Select Bowling Team</option>
+        {% for t in teams %}
+        <option value="{{t}}">{{t}}</option>
+        {% endfor %}
+    </select>
+
+    <!-- Stats -->
+    <input type="number" id="player_avg" class="form-control mb-2" placeholder="Career Avg Runs">
+    <input type="number" id="last5_avg" class="form-control mb-2" placeholder="Last 5 Avg">
+
+    <button class="btn btn-danger w-100" onclick="predictPlayer()">Predict Runs</button>
+
+    <h4 class="mt-3 text-center" id="result"></h4>
+
+</div>
+
+<script>
+    function predictPlayer() {
+
+        const data = {
+            player: document.getElementById("player").value,
+            batting_team: document.getElementById("batting_team").value,
+            bowling_team: document.getElementById("bowling_team").value,
+            player_avg: document.getElementById("player_avg").value || 0,
+            last5_avg: document.getElementById("last5_avg").value || 0
+        };
+
+        if (!data.player || !data.batting_team || !data.bowling_team) {
+            alert("Please fill all fields!");
+            return;
+        }
+
+        fetch("/predict_player", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(data)
+        })
+            .then(res => res.json())
+            .then(res => {
+                document.getElementById("result").innerText =
+                    "Predicted Runs: " + res.prediction;
+            })
+            .catch(() => alert("Error in prediction"));
+    }
+</script>
+
+{% endblock %}

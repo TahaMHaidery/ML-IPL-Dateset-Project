@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h2>🤝 Head-to-Head Analysis</h2>
+
+<div class="card p-4">
+
+    <select id="h1" class="form-control mb-3">
+        <option value="">Select Team 1</option>
+        {% for t in teams %}
+        <option value="{{t}}">{{t}}</option>
+        {% endfor %}
+    </select>
+
+    <select id="h2" class="form-control mb-3">
+        <option value="">Select Team 2</option>
+        {% for t in teams %}
+        <option value="{{t}}">{{t}}</option>
+        {% endfor %}
+    </select>
+
+    <button class="btn btn-dark w-100" onclick="getH2H()">
+        Compare Teams
+    </button>
+
+    <div class="text-center mt-4" id="h2h_result"></div>
+
+</div>
+
+{% endblock %}

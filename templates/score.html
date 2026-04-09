@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h2>📈 Score Prediction</h2>
+
+<div class="card p-4">
+
+    <!-- Batting Team -->
+    <select id="batting_team" class="form-control mb-3">
+        <option value="">Select Batting Team</option>
+        {% for t in teams %}
+        <option value="{{t}}">{{t}}</option>
+        {% endfor %}
+    </select>
+
+    <!-- Bowling Team -->
+    <select id="bowling_team" class="form-control mb-3">
+        <option value="">Select Bowling Team</option>
+        {% for t in teams %}
+        <option value="{{t}}">{{t}}</option>
+        {% endfor %}
+    </select>
+
+    <!-- Venue -->
+    <select id="venue" class="form-control mb-3">
+        <option value="">Select Venue</option>
+        {% for v in venues %}
+        <option value="{{v}}">{{v}}</option>
+        {% endfor %}
+    </select>
+
+    <!-- Match Inputs -->
+    <input id="over" type="number" class="form-control mb-2" placeholder="Overs (e.g. 10.2)">
+    <input id="runs" type="number" class="form-control mb-2" placeholder="Current Runs">
+    <input id="wickets" type="number" class="form-control mb-3" placeholder="Wickets Lost">
+
+    <!-- Button -->
+    <button class="btn btn-warning w-100" onclick="predictScore()">
+        Predict Score
+    </button>
+
+    <!-- Result -->
+    <div class="text-center mt-4">
+        <h4 id="score_result"></h4>
+    </div>
+
+</div>
+
+<!-- JS -->
+<script>
+    function predictScore() {
+        const bat = document.getElementById("batting_team").value;
+        const bowl = document.getElementById("bowling_team").value;
+        const venue = document.getElementById("venue").value;
+        const over = document.getElementById("over").value;
+        const runs = document.getElementById("runs").value;
+        const wickets = document.getElementById("wickets").value;
+
+        // Validation
+        if (!bat || !bowl || !venue || !over || !runs) {
+            alert("Please fill all fields!");
+            return;
+        }
+
+        if (bat === bowl) {
+            alert("Batting and Bowling team cannot be same!");
+            return;
+        }
+
+        fetch("/predict_score", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                over: over,
+                cum_runs: runs,
+                cum_wickets: wickets,
+                batting_team: bat,
+                bowling_team: bowl,
+                venue: venue
+            })
+        })
+            .then(res => res.json())
+            .then(data => {
+                document.getElementById("score_result").innerHTML =
+                    `🏏 Predicted Score: <b>${data.score}</b><br>
+             📊 Range: ${data.low} - ${data.high}`;
+            });
+    }
+</script>
+
+{% endblock %}

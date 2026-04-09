@@ -1,0 +1,181 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h2>📊 IPL Analytics Dashboard</h2>
+
+<!-- KPI Cards -->
+<div class="row mt-4">
+
+    <div class="col-md-3">
+        <div class="card p-3 text-center">
+            <h6>Total Matches</h6>
+            <h3 id="matches"></h3>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card p-3 text-center">
+            <h6>Total Teams</h6>
+            <h3 id="teams"></h3>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card p-3 text-center">
+            <h6>Toss Win %</h6>
+            <h3 id="tossWin"></h3>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card p-3 text-center">
+            <h6>Seasons</h6>
+            <h3 id="seasons"></h3>
+        </div>
+    </div>
+
+</div>
+
+<div class="row mt-5 g-4">
+
+    <div class="col-md-6 d-flex">
+        <div class="card p-4 w-100">
+            <h5>🏆 Top Teams</h5>
+            <canvas id="teamChart"></canvas>
+        </div>
+    </div>
+
+    <div class="col-md-6 d-flex">
+        <div class="card p-4 w-100">
+            <h5>🎲 Toss Decision</h5>
+            <canvas id="tossChart"></canvas>
+        </div>
+    </div>
+
+</div>
+
+<div class="row mt-4 g-4">
+
+    <div class="col-md-6 d-flex">
+        <div class="card p-4 w-100">
+            <h5>📅 Matches per Season</h5>
+            <canvas id="seasonChart"></canvas>
+        </div>
+    </div>
+
+    <div class="col-md-6 d-flex">
+        <div class="card p-4 w-100">
+            <h5>🏟️ Top Venues</h5>
+            <canvas id="venueChart"></canvas>
+        </div>
+    </div>
+
+</div>
+
+<div class="row mt-4">
+
+    <div class="col-md-12 d-flex">
+        <div class="card p-4 w-100">
+            <h5>🤖 Model Accuracy</h5>
+            <canvas id="modelChart"></canvas>
+        </div>
+    </div>
+
+</div>
+
+<!-- JS -->
+<script>
+    fetch("/api/stats")
+        .then(res => res.json())
+        .then(data => {
+
+            // KPIs
+            document.getElementById("matches").innerText = data.total_matches;
+            document.getElementById("teams").innerText = data.total_teams;
+            document.getElementById("tossWin").innerText = data.toss_win_pct + "%";
+            document.getElementById("seasons").innerText = data.total_seasons;
+
+            // Top Teams
+            new Chart(teamChart, {
+                type: "bar",
+                data: {
+                    labels: Object.keys(data.top_teams),
+                    datasets: [{
+                        label: "Wins",
+                        data: Object.values(data.top_teams),
+                        backgroundColor: "#3b82f6"
+                    }]
+                }
+            });
+
+            // Toss Decision
+            new Chart(tossChart, {
+                type: "pie",
+                data: {
+                    labels: Object.keys(data.toss_decisions),
+                    datasets: [{
+                        data: Object.values(data.toss_decisions),
+                        backgroundColor: ["#3b82f6", "#ef4444"]
+                    }]
+                }
+            });
+
+            // Season Matches
+            new Chart(seasonChart, {
+                type: "line",
+                data: {
+                    labels: Object.keys(data.season_matches),
+                    datasets: [{
+                        label: "Matches",
+                        data: Object.values(data.top_teams),
+                        backgroundColor: "#3b82f6"
+                    }]
+                }
+            });
+
+            // Venue Chart
+            new Chart(venueChart, {
+                type: "bar",
+                data: {
+                    labels: Object.keys(data.top_venues),
+                    datasets: [{
+                        label: "Matches",
+                        data: Object.values(data.top_teams),
+                        backgroundColor: "#3b82f6"
+                    }]
+                }
+            });
+
+            console.log(data);
+
+            const modelData = {
+                "Winner Model": (data.best_models["winner"]["score"] || 0),
+                "Toss Model": (data.best_models["toss"]["score"] || 0),
+                "Score Model": (data.best_models["score"]["r2"] || 0),
+                "PLayer Model": (data.best_models["player"]["score"] || 0)
+            };
+
+            new Chart(modelChart, {
+                type: "bar",
+                data: {
+                    labels: Object.keys(modelData),
+                    datasets: [{
+                        label: "Accuracy",
+                        data: Object.values(modelData),
+                        backgroundColor: ["#3b82f6", "#10b981", "#f59e0b", "#f5090b"]
+                    }]
+                },
+                options: {
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100
+                        }
+                    }
+                }
+            });
+
+        });
+</script>
+
+{% endblock %}

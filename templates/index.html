@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>IPL Predictor</title>
+
+    <style>
+        body {
+            font-family: Arial;
+            background: linear-gradient(to right, #ff512f, #dd2476);
+        }
+
+        .container {
+            width: 420px;
+            margin: 40px auto;
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            text-align: center;
+        }
+
+        select,
+        button,
+        input {
+            width: 100%;
+            padding: 10px;
+            margin-top: 10px;
+            border-radius: 6px;
+            border: 1px solid #ccc;
+        }
+
+        button {
+            background: #ff512f;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #dd2476;
+        }
+
+        .result {
+            margin-top: 15px;
+            font-weight: bold;
+            color: green;
+        }
+
+        hr {
+            margin: 20px 0;
+        }
+    </style>
+
+    <script>
+        function updateTossOptions() {
+            const t1 = document.getElementById("team1").value;
+            const t2 = document.getElementById("team2").value;
+
+            const toss = document.getElementById("toss_winner");
+            toss.innerHTML = "";
+
+            if (t1 === t2) return;
+
+            let o1 = new Option(t1, t1);
+            let o2 = new Option(t2, t2);
+
+            toss.add(o1);
+            toss.add(o2);
+        }
+
+        function validateTeams() {
+            const t1 = document.getElementById("team1").value;
+            const t2 = document.getElementById("team2").value;
+
+            if (t1 === t2) {
+                alert("❌ Please select different teams!");
+                return false;
+            }
+            return true;
+        }
+
+        function predictWinner() {
+
+            if (!validateTeams()) {
+                alert("❌ Error!");
+                return;
+            };
+
+            const data = {
+                team1: document.getElementById("team1").value,
+                team2: document.getElementById("team2").value,
+                toss_winner: document.getElementById("toss_winner").value,
+                toss_decision: document.getElementById("toss_decision").value,
+                venue: document.getElementById("venue").value
+            };
+
+            fetch("/predict_winner", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(data)
+            })
+                .then(res => res.json())
+                .then(data => {
+                    document.getElementById("winner_result").innerHTML =
+                        "🏆 Winner: " + data.winner;
+                });
+        }
+
+        function predictScore() {
+
+            const over = document.getElementById("over").value;
+
+            if (!over) {
+                alert("❌ Enter over value!");
+                return;
+            }
+
+            fetch("/predict_score", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ over })
+            })
+                .then(res => res.json())
+                .then(data => {
+                    document.getElementById("score_result").innerHTML =
+                        "📊 Predicted Score: " + data.score;
+                });
+        }
+
+        function predictToss() {
+
+            if (!validateTeams()) return;
+
+            const team1 = document.getElementById("team1").value;
+            const team2 = document.getElementById("team2").value;
+
+            fetch("/predict_toss", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ team1, team2 })
+            })
+                .then(res => res.json())
+                .then(data => {
+                    document.getElementById("toss_result").innerHTML =
+                        "🪙 Toss Winner: " + data.toss_winner;
+                });
+        }
+
+        window.onload = updateTossOptions;
+    </script>
+
+</head>
+
+<body>
+
+    <div class="container">
+
+        <h2>🏏 IPL Predictor</h2>
+
+        <!-- TEAM SELECT -->
+        <select id="team1" onchange="updateTossOptions()">
+            {% for t in teams %}
+            <option value="{{t}}">{{t}}</option>
+            {% endfor %}
+        </select>
+
+        <select id="team2" onchange="updateTossOptions()">
+            {% for t in teams %}
+            <option value="{{t}}">{{t}}</option>
+            {% endfor %}
+        </select>
+
+        <!-- TOSS -->
+        <select id="toss_winner"></select>
+
+        <select id="toss_decision">
+            {% for d in toss_decisions %}
+            <option value="{{d}}">{{d}}</option>
+            {% endfor %}
+        </select>
+
+        <!-- VENUE -->
+        <select id="venue">
+            {% for v in venues %}
+            <option value="{{v}}">{{v}}</option>
+            {% endfor %}
+        </select>
+
+        <button onclick="predictWinner()">Predict Winner</button>
+        <div class="result" id="winner_result"></div>
+
+        <hr>
+
+        <!-- SCORE -->
+        <input type="number" id="over" placeholder="Enter Over (e.g. 10)">
+        <button onclick="predictScore()">Predict Score</button>
+        <div class="result" id="score_result"></div>
+
+        <hr>
+
+        <!-- TOSS -->
+        <button onclick="predictToss()">Predict Toss</button>
+        <div class="result" id="toss_result"></div>
+
+    </div>
+
+</body>
+
+</html>
